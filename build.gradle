@@ -1,0 +1,112 @@
+plugins {
+    id 'net.fabricmc.fabric-loom-remap' version "${loom_version}"
+    id 'org.jetbrains.kotlin.jvm' version '2.3.20-RC3'
+    id 'maven-publish'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+    maven { url = 'https://maven.maxhenkel.de/repository/public' }
+    maven { name = "Lenni0451"; url = "https://maven.lenni0451.net/everything" }
+    flatDir {
+        dirs 'libs'
+    }
+}
+
+loom {
+    accessWidenerPath = file("src/main/resources/accesswidener")
+
+    runs {
+        client {
+            vmArgs '-Xss2m'
+        }
+    }
+}
+
+dependencies {
+    // Minecraft
+    minecraft "com.mojang:minecraft:${project.minecraft_version}"
+    mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+    // Netty
+    include(modImplementation('io.netty:netty-handler-proxy:4.1.82.Final'))
+    include(modImplementation('io.netty:netty-codec-socks:4.1.82.Final'))
+
+    // Lombok
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // MediaPlayerInfo
+    implementation files('libs/MediaPlayerInfo-0.1.0.jar')
+
+    // JNA
+    include(implementation('net.java.dev.jna:jna:5.14.0'))
+    include(implementation('net.java.dev.jna:jna-platform:5.14.0'))
+
+    // Kotlin
+    include(implementation('org.jetbrains.kotlin:kotlin-stdlib:1.9.22'))
+
+    // Lua scripting (pure Java, no native libs to bundle per-platform)
+    include(implementation('org.luaj:luaj-jse:3.0.1'))
+}
+
+processResources {
+    inputs.property "version", project.version
+    filesMatching("fabric.mod.json") {
+        expand "version": inputs.properties.version
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+    it.options.encoding = 'UTF-8'
+    options.compilerArgs += ['--enable-preview']
+}
+
+java {
+    withSourcesJar()
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+    inputs.property "archivesName", project.base.archivesName
+    from("LICENSE") {
+        rename { "${it}_${inputs.properties.archivesName}"}
+    }
+
+    from(zipTree("libs/MediaPlayerInfo-0.1.0.jar")) {
+        exclude "fabric.mod.json"
+        exclude "META-INF/*.SF"
+        exclude "META-INF/*.DSA"
+        exclude "META-INF/*.RSA"
+    }
+
+    duplicatesStrategy(DuplicatesStrategy.EXCLUDE)
+}
+
+tasks.named('remapJar') {
+    from(zipTree("libs/MediaPlayerInfo-0.1.0.jar")) {
+        exclude "fabric.mod.json"
+    }
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+publishing {
+    publications {
+        create("mavenJava", MavenPublication) {
+            artifactId = project.archives_base_name
+            from components.java
+        }
+    }
+}

@@ -1,0 +1,44 @@
+{
+  "targets": {
+    "rich:blur_x":   { "persistent": true },
+    "rich:blurred":  { "persistent": true },
+    "rich:bloom":    { "persistent": true }
+  },
+  "passes": [
+    {
+      "vertex_shader": "rich:core/blit_fullscreen",
+      "fragment_shader": "rich:core/blur1",
+      "inputs": [
+        { "sampler_name": "Diffuse", "target": "minecraft:main", "bilinear": true }
+      ],
+      "output": "rich:blur_x",
+      "uniforms": { "Config": [ { "type": "vec2", "value": [1.0, 0.0] } ] }
+    },
+    {
+      "vertex_shader": "rich:core/blit_fullscreen",
+      "fragment_shader": "rich:core/blur1",
+      "inputs": [
+        { "sampler_name": "Diffuse", "target": "rich:blur_x", "bilinear": true }
+      ],
+      "output": "rich:blurred",
+      "uniforms": { "Config": [ { "type": "vec2", "value": [0.0, 1.0] } ] }
+    },
+    {
+      "vertex_shader": "rich:core/blit_fullscreen",
+      "fragment_shader": "rich:core/bloom",
+      "inputs": [
+        {
+          "sampler_name": "iChannel0",
+          "target": "minecraft:main",
+          "bilinear": true
+        },
+        {
+          "sampler_name": "iChannel1",
+          "target": "rich:blurred",
+          "bilinear": true
+        }
+      ],
+      "output": "rich:bloom"
+    }
+  ]
+}

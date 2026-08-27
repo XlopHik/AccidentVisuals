@@ -1,0 +1,14 @@
+{
+  "atlas": { "type": "msdf", "distanceRange": 2, "distanceRangeMiddle": 0, "size": 32, "width": 624, "height": 624, "yOrigin": "bottom" },
+  "metrics": { "emSize": 1, "lineHeight": 1, "ascender": 0.9375, "descender": -0.0625, "underlineY": 0, "underlineThickness": 0 },
+  "glyphs": [
+    { "index": 0, "advance": 0, "char": "\uE000" },
+    { "index": 1, "advance": 1, "char": "\uE001" },
+    { "index": 2, "advance": 1, "char": "\uE002" },
+    { "index": 3, "advance": 0.5, "char": "\uE003" },
+    { "index": 4, "advance": 1, "planeBounds": { "left": 0, "bottom": 0.015625, "right": 1, "top": 0.921875 }, "atlasBounds": { "left": 0.5, "bottom": 594.5, "right": 32.5, "top": 623.5 }, "char": "\uE004" },
+    { "index": 5, "advance": 1, "planeBounds": { "left": 0.17138671875, "bottom": 0.109375, "right": 0.82763671875, "top": 0.765625 }, "atlasBounds": { "left": 0.5, "bottom": 552.5, "right": 21.5, "top": 573.5 }, "char": "\uE005" },
+    { "index": 6, "advance": 1, "planeBounds": { "left": 0.13037109375, "bottom": 0.140625, "right": 0.91162109375, "top": 0.734375 }, "atlasBounds": { "left": 0.5, "bottom": 574.5, "right": 25.5, "top": 593.5 }, "char": "\uE006" }
+  ],
+  "kerning": []
+}

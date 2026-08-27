@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "accident",
+  "version": "${version}",
+  "name": "AccidentVisuals",
+  "description": "Best visuals!",
+  "authors": ["Reizi, luvhvrt"],
+  "contact": {},
+  "license": "MIT",
+  "icon": "assets/accident/textures/gui/logo.png",
+  "environment": "client",
+  "entrypoints": {
+    "preLaunch": [
+      "accident.util.mods.config.wave.WaveCapesConfigOverride"
+    ],
+    "client": [
+      "accident.Initialization"
+    ]
+  },
+  "mixins": [
+    "mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.18.4",
+    "fabric-api": "*",
+    "minecraft": "~1.21.11",
+    "java": ">=21"
+  }
+}
