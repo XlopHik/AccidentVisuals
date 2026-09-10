@@ -21,13 +21,20 @@ public class CustomSky extends ModuleStructure {
     @Getter
     private static CustomSky instance;
 
-    // Index the shader branches on. Keep in step with the values above.
+    // Индексы веток шейдера. Значения должны совпадать с перечисленными выше стилями.
     public float getStyleIndex() {
         if (style.isSelected("Aurora")) return 1.0f;
         if (style.isSelected("Galaxy")) return 2.0f;
         if (style.isSelected("Borealis")) return 3.0f;
         if (style.isSelected("Solstice")) return 4.0f;
         if (style.isSelected("Tempest")) return 5.0f;
+        if (style.isSelected("Vibe")) return 6.0f;
+        if (style.isSelected("Cosmos")) return 7.0f;
+        if (style.isSelected("Crown Aurora")) return 8.0f;
+        if (style.isSelected("Crown Galaxy")) return 9.0f;
+        if (style.isSelected("Crown Sunset")) return 10.0f;
+        if (style.isSelected("Crown Storm")) return 11.0f;
+        if (style.isSelected("Crown Crystal")) return 12.0f;
         return 0.0f;
     }
 
@@ -46,11 +53,12 @@ public class CustomSky extends ModuleStructure {
 
     @Getter
     SelectSetting style = new SelectSetting("accident.module.customsky.setting.style.name", "accident.module.customsky.setting.style.desc")
-            .value("Space", "Aurora", "Galaxy", "Borealis", "Solstice", "Tempest")
+            .value("Space", "Aurora", "Galaxy", "Borealis", "Solstice", "Tempest", "Vibe", "Cosmos",
+                    "Crown Aurora", "Crown Galaxy", "Crown Sunset", "Crown Storm", "Crown Crystal")
             .selected("Space");
 
-    // Drives the whole palette: the gradient, the nebula and the fog tint, so the
-    // sky and the haze under it can never disagree.
+    // Управляет всей палитрой: градиентом, туманностью и оттенком тумана,
+    // чтобы цвет неба и дымка под ним всегда совпадали.
     @Getter
     ColorSetting skyColor = new ColorSetting("accident.module.customsky.setting.skycolor.name", "accident.module.customsky.setting.skycolor.desc")
             .value(new java.awt.Color(24, 60, 130).getRGB());
@@ -95,5 +103,3 @@ public class CustomSky extends ModuleStructure {
         renderer.setSkyBlue(getSkyBlue());
     }
 }
-
-

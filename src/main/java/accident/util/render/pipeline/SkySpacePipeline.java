@@ -43,16 +43,16 @@ public class SkySpacePipeline {
             SourceFactor.ONE,       DestFactor.ZERO
     );
 
-    // low-res текстура каждый кадр новая (не персистентная), поэтому тут нужна
-    // полная перезапись, а не блендинг с мусором/прошлым кадром - реальный
-    // блендинг с миром происходит один раз, в upscale-проходе
+    // Текстура пониженного разрешения каждый кадр создаётся заново, поэтому её
+    // нужно полностью перезаписывать. Накладываем небо на мир только один раз —
+    // во втором проходе, когда увеличиваем готовую текстуру.
     private static final BlendFunction REPLACE_BLEND = new BlendFunction(
             SourceFactor.ONE, DestFactor.ZERO,
             SourceFactor.ONE, DestFactor.ZERO
     );
 
-    // тормозит именно шум/звёзды в space_sky.fsh, не сам проход - поэтому рендерим
-    // в четверть пикселей и апскейлим, небо низкочастотное и разницы не видно
+    // Время съедают шум и звёзды из space_sky.fsh, а не сам проход. Поэтому
+    // считаем небо в четыре раза дешевле, а затем аккуратно увеличиваем результат.
     private static final int DOWNSCALE = 2;
 
     private static final RenderPipeline LOWRES_PIPELINE = RenderPipelines.register(
@@ -88,8 +88,8 @@ public class SkySpacePipeline {
     private static final Vector3f MODEL_OFFSET    = new Vector3f(0, 0, 0);
     private static final Matrix4f TEXTURE_MATRIX  = new Matrix4f();
 
-    // 8 floats of settings (32 bytes), the inverse view-projection matrix (64),
-    // then the sky colour as a vec4 (16).
+    // 8 настроек float (32 байта), обратная матрица view-projection (64),
+    // затем цвет неба в виде vec4 (16).
     private static final int BUFFER_SIZE = 112;
 
     private GpuBuffer uniformBuffer;
@@ -105,6 +105,7 @@ public class SkySpacePipeline {
     private int lowResHeight = 0;
     private int lastWidth = 0;
     private int lastHeight = 0;
+    private int lastDownscale = 0;
 
     public SkySpacePipeline() {}
 
@@ -127,14 +128,14 @@ public class SkySpacePipeline {
         initialized = true;
     }
 
-    private void ensureLowResTarget(int width, int height) {
-        if (width == lastWidth && height == lastHeight && lowResTextureView != null) return;
+    private void ensureLowResTarget(int width, int height, int downscale) {
+        if (width == lastWidth && height == lastHeight && downscale == lastDownscale && lowResTextureView != null) return;
 
         if (lowResTextureView != null) { lowResTextureView.close(); lowResTextureView = null; }
         if (lowResTexture != null)     { lowResTexture.close();     lowResTexture     = null; }
 
-        lowResWidth  = Math.max(1, width  / DOWNSCALE);
-        lowResHeight = Math.max(1, height / DOWNSCALE);
+        lowResWidth  = Math.max(1, width  / downscale);
+        lowResHeight = Math.max(1, height / downscale);
 
         lowResTexture = RenderSystem.getDevice().createTexture(
                 () -> "accident:space_sky_lowres",
@@ -146,6 +147,7 @@ public class SkySpacePipeline {
 
         lastWidth  = width;
         lastHeight = height;
+        lastDownscale = downscale;
     }
 
     public void render(GpuTextureView targetView,
@@ -158,7 +160,13 @@ public class SkySpacePipeline {
                        float style) {
 
         ensureInitialized();
-        ensureLowResTarget(width, height);
+
+        // Объём Cosmos содержит тонкие высокочастотные складки. Рендер в половинном
+        // разрешении превращает их в мягкое размытие после увеличения текстуры.
+        // Остальные небеса намеренно остаются уменьшенными, а Cosmos получает
+        // полноразмерную текстуру для чёткого итогового изображения.
+        int downscale = Math.round(style) == 7 ? 1 : DOWNSCALE;
+        ensureLowResTarget(width, height, downscale);
 
         prepareUniformData(time, sunAngle, fogDensity, starBrightness, lowResWidth, lowResHeight, opacity, invViewProj,
                 skyRed, skyGreen, skyBlue, style);
@@ -179,7 +187,7 @@ public class SkySpacePipeline {
         GpuBufferSlice dynamicTransforms = RenderSystem.getDynamicUniforms()
                 .write(RenderSystem.getModelViewMatrix(), COLOR_MODULATOR, MODEL_OFFSET, TEXTURE_MATRIX);
 
-        // Pass 1: the actual sky math, at a quarter of the screen's pixel count.
+        // Проход 1: вычисление неба на четверти количества пикселей экрана.
         try (RenderPass renderPass = encoder.createRenderPass(
                 () -> "accident:space_sky_lowres_pass",
                 lowResTextureView,
@@ -195,8 +203,8 @@ public class SkySpacePipeline {
             renderPass.draw(0, 6);
         }
 
-        // Pass 2: a single texture sample per screen pixel, blended over the
-        // world exactly like the old single-pass version did.
+        // Проход 2: по одной выборке текстуры на пиксель экрана с наложением
+        // на мир так же, как это делала прежняя однопроходная версия.
         GpuSampler sampler = RenderSystem.getSamplerCache().get(FilterMode.LINEAR);
 
         if (upscaleUniformBuffer == null) {
@@ -243,7 +251,7 @@ public class SkySpacePipeline {
         dataBuffer.putFloat(opacity);
         dataBuffer.putFloat(style);
 
-        // Column-major, which is what std140 expects and what JOML stores.
+        // Порядок столбцов: именно его ожидает std140 и использует JOML.
         invViewProj.get(dataBuffer);
         dataBuffer.position(dataBuffer.position() + 64);
 
@@ -264,6 +272,7 @@ public class SkySpacePipeline {
         if (lowResTexture != null)        { lowResTexture.close();             lowResTexture        = null; }
         lastWidth = 0;
         lastHeight = 0;
+        lastDownscale = 0;
         initialized = false;
     }
 }
