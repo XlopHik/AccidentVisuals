@@ -8,8 +8,8 @@ import accident.modules.module.setting.implement.SliderSettings;
 import accident.util.Instance;
 import accident.util.lang.LanguageManager;
 
-// показывает сущностей, скрытых сервером - ванильный рендер призрака уже умеет это, просто говорим ему что игрок видим
-// работает только на HolyWorld, на других серверах невидимых игроков не присылают вообще, поэтому модуль там залочен
+import static accident.IMinecraft.mc;
+
 public class SeeInvisible extends ModuleStructure {
 
     private final BooleanSetting solid = new BooleanSetting(
@@ -34,7 +34,7 @@ public class SeeInvisible extends ModuleStructure {
 
     @Override
     public boolean isLocked() {
-        return !ServerManager.isHolyWorld();
+        return !isAvailable();
     }
 
     @Override
@@ -43,14 +43,17 @@ public class SeeInvisible extends ModuleStructure {
     }
 
     public boolean shouldReveal() {
-        return isState() && !isLocked();
+        return isState() && isAvailable();
+    }
+
+    private boolean isAvailable() {
+        return ServerManager.isHolyWorld() || mc.isInSingleplayer() || mc.isIntegratedServerRunning();
     }
 
     public boolean isSolid() {
         return solid.isValue();
     }
 
-    /** White at the configured opacity, the same shape as vanilla's own ghost tint. */
     public int ghostTint() {
         int alpha = Math.max(0, Math.min(255, Math.round(opacity.getValue() * 255f)));
         return (alpha << 24) | 0xFFFFFF;

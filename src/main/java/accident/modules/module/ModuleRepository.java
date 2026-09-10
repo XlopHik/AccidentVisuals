@@ -33,7 +33,6 @@ public class ModuleRepository {
                 .add(new CustomSky())
                 .add(new ItemReplacer())
                 .add(new CustomModels())
-              //  .add(new WaveHands())
                 .add(new FireFly())
                 .add(new InventoryAnim())
                 .add(new Trails())
@@ -44,7 +43,6 @@ public class ModuleRepository {
                 .add(new JumpWave())
                 .add(new Predictions())
                 .add(new TntTimer())
-               // .add(new GlassChams())
                 .add(new WorldParticles())
                 .add(new Particles())
                 .add(new GlassHands())
@@ -85,8 +83,7 @@ public class ModuleRepository {
                 .add(new HotKeys())
                 .add(new Info())
                 .add(new Media())
-                .add(new CoolDowns())
-                .add(new ServerLabel());
+                .add(new CoolDowns());
     }
 
     public ModuleBuilder builder() {
